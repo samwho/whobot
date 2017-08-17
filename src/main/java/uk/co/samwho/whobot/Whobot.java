@@ -1,9 +1,12 @@
 package uk.co.samwho.whobot;
 
 import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.hooks.EventListener;
+import uk.co.samwho.whobot.commands.EchoCommand;
+import uk.co.samwho.whobot.listeners.CommandDispatcher;
+import uk.co.samwho.whobot.listeners.StatsCollector;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -20,13 +23,17 @@ public class Whobot {
             System.exit(1);
         }
 
-        EventDispatcher dispatcher = new EventDispatcher();
+        StatsCollector stats = new StatsCollector();
+        CommandDispatcher dispatcher = new CommandDispatcher();
+
+        dispatcher.register("echo", new EchoCommand());
 
         try
         {
             new JDABuilder(AccountType.BOT)
                 .setToken(token)
                 .addEventListener(dispatcher)
+                .addEventListener(stats)
                 .buildBlocking();
         }
         catch (LoginException | InterruptedException | RateLimitedException e)
