@@ -6,6 +6,5 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 public final class StatsCollector extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-
     }
 }
