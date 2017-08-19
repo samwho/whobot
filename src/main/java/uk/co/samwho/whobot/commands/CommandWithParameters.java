@@ -2,7 +2,7 @@ package uk.co.samwho.whobot.commands;
 
 import com.beust.jcommander.JCommander;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import uk.co.samwho.whobot.ParsedMessageContent;
+import uk.co.samwho.whobot.util.ParsedMessageContent;
 
 public abstract class CommandWithParameters implements Command {
     @Override

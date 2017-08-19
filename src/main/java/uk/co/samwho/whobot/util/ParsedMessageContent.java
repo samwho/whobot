@@ -1,7 +1,8 @@
-package uk.co.samwho.whobot;
+package uk.co.samwho.whobot.util;
 
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import uk.co.samwho.whobot.Config;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +31,7 @@ public class ParsedMessageContent {
     }
 
     public boolean isCommand() {
-        return splitMessage.size() >= 2 && splitMessage.get(0).equals(Config.COMMAND_PREFIX);
+        return splitMessage.size() >= 2 && splitMessage.get(0).equals(Config.prefix());
     }
 
     public String getCommandName() {
