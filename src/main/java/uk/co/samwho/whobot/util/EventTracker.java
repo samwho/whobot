@@ -101,6 +101,11 @@ public class EventTracker {
         }
     }
 
+    public synchronized void reset() {
+        events.clear();
+        counter.set(0);
+    }
+
     public long count() {
         removeOldEvents();
         return counter.get();

@@ -2,27 +2,14 @@ package uk.co.samwho.whobot.util;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.time.Duration;
-import java.time.Instant;
 
 @RunWith(JUnit4.class)
-public class EventTrackerTest {
-    private FakeClock clock;
-
-    private static Instant minutesAgo(int mins) {
-        return Instant.now().minus(Duration.ofMinutes(mins));
-    }
-
-    @Before
-    public void setUp() {
-        this.clock = FakeClock.at(Instant.now());
-    }
-
+public class EventTrackerTest extends TestWithTime {
     @Test
     public void testSimpleEvent() {
         EventTracker tracker = EventTracker.builder()
@@ -58,15 +45,50 @@ public class EventTrackerTest {
     }
 
     @Test
+    public void testAddingEventsRightNow() {
+        EventTracker tracker = EventTracker.builder()
+                .duration(Duration.ofHours(1))
+                .clock(clock())
+                .build();
+
+        tracker.inc(1, now());
+        assertThat(tracker.count()).isEqualTo(1);
+    }
+
+    @Test
     public void testEventFallingOutOfRange() {
         EventTracker tracker = EventTracker.builder()
                 .duration(Duration.ofHours(1))
-                .clock(clock)
+                .clock(clock())
                 .build();
 
         tracker.inc(1, minutesAgo(0));
-        clock.advance(Duration.ofMinutes(61));
+        advance(Duration.ofMinutes(61));
 
         assertThat(tracker.count()).isEqualTo(0);
+    }
+
+    @Test
+    public void testReset() {
+        EventTracker tracker = EventTracker.builder()
+                .duration(Duration.ofHours(1))
+                .build();
+
+        tracker.inc(1, minutesAgo(5));
+        assertThat(tracker.count()).isEqualTo(1);
+
+        tracker.reset();
+        assertThat(tracker.count()).isEqualTo(0);
+    }
+
+    @Test
+    public void testIncrementingByMoreThan1() {
+        EventTracker tracker = EventTracker.builder()
+                .duration(Duration.ofHours(1))
+                .clock(clock())
+                .build();
+
+        tracker.inc(10, now());
+        assertThat(tracker.count()).isEqualTo(10);
     }
 }

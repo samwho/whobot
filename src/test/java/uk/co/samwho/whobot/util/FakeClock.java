@@ -8,6 +8,10 @@ import java.time.ZoneId;
 public class FakeClock extends Clock {
     private Instant now;
 
+    public static FakeClock now() {
+        return at(Instant.now());
+    }
+
     public static FakeClock at(Instant now) {
         return new FakeClock(now);
     }
@@ -24,6 +28,10 @@ public class FakeClock extends Clock {
         now = now.minus(duration);
     }
 
+    public void reset() {
+        now = Instant.now();
+    }
+
     @Override
     public Instant instant() {
         return now;
@@ -31,7 +39,7 @@ public class FakeClock extends Clock {
 
     @Override
     public ZoneId getZone() {
-        throw new UnsupportedOperationException();
+        return ZoneId.systemDefault();
     }
 
     @Override

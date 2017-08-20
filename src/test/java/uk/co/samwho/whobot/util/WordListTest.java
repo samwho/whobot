@@ -45,4 +45,11 @@ public class WordListTest {
         WordList list = WordList.from(Stream.of("a"));
         assertThat(list.allMatches("aaaaa")).isEmpty();
     }
+
+    @Test
+    public void testMultipleMatchesOfSameWord() {
+        WordList list = WordList.from(Stream.of("foo"));
+        assertThat(list.allMatches("foo foo foo foo")).containsExactly("foo", "foo", "foo", "foo");
+        assertThat(list.numMatches("foo foo foo foo")).isEqualTo(4);
+    }
 }

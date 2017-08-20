@@ -7,10 +7,13 @@ import com.google.common.collect.Lists;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.co.samwho.whobot.util.EventTracker;
 import uk.co.samwho.whobot.util.WordList;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
@@ -25,14 +28,16 @@ import java.util.function.Consumer;
  *
  * <pre>
  *   WordListTracker.builder()
- *     .wordList(WordList.from(Stream.of("foo"))
+ *     .wordList(WordList.from(Stream.of("foo")))
  *     .duration(Duration.ofSeconds(60))
  *     .threshold(5)
- *     .callback((user) -> System.out.println(user.getName() + " is saying foo a lot!")
+ *     .addCallback((user) -> System.out.println(user.getName() + " is saying foo a lot!"))
  *     .build();
  * </pre>
  */
 public final class WordListTracker extends ListenerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(WordListTracker.class);
+
     private final WordList wordList;
     private final Duration duration;
     private final int threshold;
@@ -87,6 +92,7 @@ public final class WordListTracker extends ListenerAdapter {
 
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(duration.getSeconds(), TimeUnit.SECONDS)
+                .removalListener((info) -> logger.debug("removed key {} (cause: {})", info.getKey(), info.getCause()))
                 .build();
     }
 
@@ -96,22 +102,20 @@ public final class WordListTracker extends ListenerAdapter {
         try {
             tracker = cache.get(event.getAuthor(), () -> EventTracker.over(duration));
         } catch (ExecutionException e) {
-            return;
+            throw new RuntimeException(e);
         }
 
-        tracker.inc(
-                wordList.numMatches(event.getMessage().getContent()),
-                event.getMessage().getCreationTime().toInstant());
+        int numMatches = wordList.numMatches(event.getMessage().getContent());
+        Instant time = event.getMessage().getCreationTime().toInstant();
+        tracker.inc(numMatches, time);
 
-        /**
-         * This currently triggers too much. If you go over the threshold in a given time window once, it will continue
-         * to fire every other time you mention a word in the word list. It would be better if the counter reset after
-         * the event fired.
-         */
-        if (tracker.count() > threshold) {
+        logger.debug("added {} to counter for {} at {}", numMatches, event.getAuthor().getName(), time);
+
+        if (tracker.count() >= threshold) {
             for (Consumer<User> callback : callbacks) {
                 callback.accept(event.getAuthor());
             }
+            tracker.reset();
         }
     }
 }
