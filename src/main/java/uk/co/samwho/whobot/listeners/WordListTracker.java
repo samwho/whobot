@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import uk.co.samwho.whobot.util.EventTracker;
 import uk.co.samwho.whobot.util.WordList;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -23,9 +24,9 @@ import java.util.function.Consumer;
 /**
  * A ListenerAdapter that tracks how often users say words in a given word list and fires callbacks when they say more
  * than a given number of times in a given amount of time.
- *
+ * <p>
  * <p>Example:
- *
+ * <p>
  * <pre>
  *   WordListTracker.builder()
  *     .wordList(WordList.from(Stream.of("foo")))
@@ -41,6 +42,7 @@ public final class WordListTracker extends ListenerAdapter {
     private final WordList wordList;
     private final Duration duration;
     private final int threshold;
+    private final Clock clock;
     private final Collection<Consumer<User>> callbacks;
     private final Cache<User, EventTracker> cache;
 
@@ -52,6 +54,7 @@ public final class WordListTracker extends ListenerAdapter {
         private WordList wordList;
         private Duration duration;
         private int threshold = 0;
+        private Clock clock;
         private Collection<Consumer<User>> callbacks = Lists.newLinkedList();
 
         public Builder wordList(WordList wordList) {
@@ -69,6 +72,11 @@ public final class WordListTracker extends ListenerAdapter {
             return this;
         }
 
+        public Builder clock(Clock clock) {
+            this.clock = clock;
+            return this;
+        }
+
         public Builder addCallback(Consumer<User> callback) {
             this.callbacks.add(callback);
             return this;
@@ -80,14 +88,19 @@ public final class WordListTracker extends ListenerAdapter {
             Preconditions.checkArgument(threshold > 0, "you must supply a non-zero threshold");
             Preconditions.checkArgument(!callbacks.isEmpty(), "you must supply at least one callback");
 
-            return new WordListTracker(wordList, duration, threshold, Collections.unmodifiableCollection(callbacks));
+            if (clock == null) {
+                clock = Clock.systemDefaultZone();
+            }
+
+            return new WordListTracker(wordList, duration, threshold, clock, Collections.unmodifiableCollection(callbacks));
         }
     }
 
-    private WordListTracker(WordList wordList, Duration duration, int threshold, Collection<Consumer<User>> callbacks) {
+    private WordListTracker(WordList wordList, Duration duration, int threshold, Clock clock, Collection<Consumer<User>> callbacks) {
         this.wordList = wordList;
         this.duration = duration;
         this.threshold = threshold;
+        this.clock = clock;
         this.callbacks = callbacks;
 
         this.cache = CacheBuilder.newBuilder()
@@ -100,7 +113,8 @@ public final class WordListTracker extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         EventTracker tracker;
         try {
-            tracker = cache.get(event.getAuthor(), () -> EventTracker.over(duration));
+            tracker = cache.get(
+                    event.getAuthor(), () -> EventTracker.builder().clock(clock).duration(duration).build());
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

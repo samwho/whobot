@@ -21,11 +21,11 @@ public class WordListTrackerTest extends TestWithMessageEvents {
             .wordList(WordList.from(Stream.of("foo")))
             .duration(Duration.ofSeconds(60))
             .threshold(2)
+            .clock(clock())
             .addCallback((user) -> counter.incrementAndGet())
             .build();
 
         tracker.onMessageReceived(event(message(user1(), "hello world")));
-        tracker.onMessageReceived(event(message(user2(), "foo foo foo")));
         tracker.onMessageReceived(event(message(user2(), "foo foo foo")));
         assertThat(counter.get()).isEqualTo(1);
     }

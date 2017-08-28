@@ -36,10 +36,9 @@ public class TestWithMessageEvents extends TestWithTime {
     }
 
     protected Message message(User author, String content) {
-        MessageImpl messageImpl = new MessageImpl(idCounter.incrementAndGet(), channel, false);
+        MessageImpl messageImpl = new MessageImpl(DiscordUtil.idFromTime(now()), channel, false);
         messageImpl.setAuthor(author);
         messageImpl.setContent(content);
-        messageImpl.setTime(OffsetDateTime.now(clock()));
         return messageImpl;
     }
 
