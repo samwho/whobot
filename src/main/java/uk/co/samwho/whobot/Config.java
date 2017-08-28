@@ -27,6 +27,13 @@ public final class Config {
     }
 
     private static Stream<String> resourceStream(String path) {
+        InputStream is = ClassLoader.getSystemResourceAsStream(path);
+
+        if (is == null) {
+            throw new RuntimeException("couldn't find resource " + path + ". You will need to create it and " +
+                "populate it with the correct information before you can run this code.");
+        }
+
         return new BufferedReader(new InputStreamReader(ClassLoader.getSystemResourceAsStream(path))).lines();
     }
 

@@ -51,6 +51,6 @@ public class TestWithMessageEvents extends TestWithTime {
     }
 
     protected User user2() {
-        return user1;
+        return user2;
     }
 }

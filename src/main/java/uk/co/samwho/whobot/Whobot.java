@@ -2,7 +2,6 @@ package uk.co.samwho.whobot;
 
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,14 +32,14 @@ public class Whobot {
 
         try
         {
-            log.info("connecting...");
+            log.info("connecting to Discord...");
             new JDABuilder(AccountType.BOT)
                 .setToken(Config.token())
                 .addEventListener(dispatcher)
                 .addEventListener(stats)
                 .addEventListener(swearTracker)
                 .buildBlocking();
-            log.info("connected");
+            log.info("connected!");
         }
         catch (LoginException | InterruptedException | RateLimitedException e)
         {
