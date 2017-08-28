@@ -7,10 +7,15 @@ import java.util.stream.Stream;
 public final class Config {
     private static final String TOKEN_FILE = "token.txt";
     private static final String BAD_WORD_FILE = "bad_words.txt";
+    private static final String OWNER_ID_FILE = "owner.txt";
     private static final String COMMAND_PREFIX = "?who";
 
     public static String token() {
         return resource(TOKEN_FILE);
+    }
+
+    public static long ownerId() {
+        return Long.parseLong(resource(OWNER_ID_FILE));
     }
 
     public static String prefix() {
