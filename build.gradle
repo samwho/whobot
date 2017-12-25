@@ -28,8 +28,6 @@ dependencies {
     compile     'net.dv8tion:JDA:3.2.0_242'
     compile     'com.beust:jcommander:1.71'
     compile     'org.fusesource.leveldbjni:leveldbjni-all:1.8'
-    compile     'org.slf4j:slf4j-api:1.8.0-alpha2'
-    compile     'org.slf4j:slf4j-jdk14:1.8.0-alpha2'
     compile     'org.ahocorasick:ahocorasick:0.4.0'
     compile     'com.google.guava:guava:23.0'
     compileOnly 'com.google.auto.value:auto-value:1.2'

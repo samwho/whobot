@@ -4,3 +4,8 @@ build/
 out/
 src/main/resources/token.txt
 src/main/resources/owner.txt
+.classpath
+.project
+.settings/
+.vscode/
+bin/

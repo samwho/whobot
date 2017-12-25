@@ -8,8 +8,6 @@ import com.google.common.collect.Sets;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.co.samwho.whobot.util.EventTracker;
 import uk.co.samwho.whobot.util.WordList;
 
@@ -22,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * A ListenerAdapter that tracks how often users say words in a given word list and fires callbacks when they say more
@@ -39,7 +38,7 @@ import java.util.function.Consumer;
  * </pre>
  */
 public final class WordListTracker extends ListenerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(WordListTracker.class);
+    private static final Logger logger = Logger.getLogger(WordListTracker.class.getName());
 
     private final WordList wordList;
     private final Duration duration;
@@ -107,7 +106,7 @@ public final class WordListTracker extends ListenerAdapter {
 
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(duration.getSeconds(), TimeUnit.SECONDS)
-                .removalListener((info) -> logger.debug("removed key {} (cause: {})", info.getKey(), info.getCause()))
+                .removalListener((info) -> logger.fine(() -> "removed key " + info.getKey() + " (cause: " + info.getCause() + ")"))
                 .build();
     }
 
@@ -125,7 +124,7 @@ public final class WordListTracker extends ListenerAdapter {
         Instant time = event.getMessage().getCreationTime().toInstant();
         tracker.inc(numMatches, time);
 
-        logger.debug("added {} to counter for {} at {}", numMatches, event.getAuthor().getName(), time);
+        logger.fine(() -> "added " + numMatches + " to counter for " + event.getAuthor().getName() + " at " + time);
 
         if (tracker.count() >= threshold) {
             for (Consumer<User> callback : callbacks) {
