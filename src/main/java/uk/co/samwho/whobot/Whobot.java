@@ -5,7 +5,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import uk.co.samwho.whobot.commands.EchoCommand;
 import uk.co.samwho.whobot.listeners.CommandDispatcher;
-import uk.co.samwho.whobot.listeners.StatsCollector;
+import uk.co.samwho.whobot.listeners.EventLogger;
 import uk.co.samwho.whobot.listeners.WordListTracker;
 import uk.co.samwho.whobot.util.WordList;
 
@@ -21,8 +21,6 @@ public class Whobot {
     public static void main(String ...args) throws IOException {
         LogManager.getLogManager().readConfiguration(
                 Whobot.class.getClassLoader().getResourceAsStream("logging.properties"));
-
-        StatsCollector stats = new StatsCollector();
 
         CommandDispatcher dispatcher = new CommandDispatcher();
         dispatcher.register("echo", new EchoCommand());
@@ -40,8 +38,8 @@ public class Whobot {
             new JDABuilder(AccountType.BOT)
                 .setToken(Config.token())
                 .addEventListener(dispatcher)
-                .addEventListener(stats)
                 .addEventListener(swearTracker)
+                .addEventListener(new EventLogger())
                 .buildBlocking();
             logger.atInfo().log("connected!");
         }
