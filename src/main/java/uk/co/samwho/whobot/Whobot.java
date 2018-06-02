@@ -2,7 +2,6 @@ package uk.co.samwho.whobot;
 
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import uk.co.samwho.whobot.commands.EchoCommand;
 import uk.co.samwho.whobot.listeners.CommandDispatcher;
 import uk.co.samwho.whobot.listeners.StatsCollector;
@@ -46,7 +45,7 @@ public class Whobot {
                 .buildBlocking();
             logger.info("connected!");
         }
-        catch (LoginException | InterruptedException | RateLimitedException e)
+        catch (LoginException | InterruptedException e)
         {
             logger.severe("error connecting to Discord: " + e);
             System.exit(1);

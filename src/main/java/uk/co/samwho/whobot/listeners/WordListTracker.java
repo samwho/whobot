@@ -120,7 +120,7 @@ public final class WordListTracker extends ListenerAdapter {
             throw new RuntimeException(e);
         }
 
-        int numMatches = wordList.numMatches(event.getMessage().getContent());
+        int numMatches = wordList.numMatches(event.getMessage().getContentRaw());
         Instant time = event.getMessage().getCreationTime().toInstant();
         tracker.inc(numMatches, time);
 

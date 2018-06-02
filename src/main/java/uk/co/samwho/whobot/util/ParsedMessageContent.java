@@ -15,11 +15,11 @@ public class ParsedMessageContent {
     private final List<String> splitMessage;
 
     public static ParsedMessageContent from(MessageReceivedEvent event) {
-        return from(event.getMessage().getContent());
+        return from(event.getMessage().getContentRaw());
     }
 
     public static ParsedMessageContent from(Message message) {
-        return from(message.getContent());
+        return from(message.getContentRaw());
     }
 
     public static ParsedMessageContent from(String content) {

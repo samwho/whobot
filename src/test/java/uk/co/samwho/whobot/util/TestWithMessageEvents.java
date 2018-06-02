@@ -9,7 +9,8 @@ import net.dv8tion.jda.core.entities.impl.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.junit.Before;
 
-import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class TestWithMessageEvents extends TestWithTime {
@@ -36,10 +37,24 @@ public class TestWithMessageEvents extends TestWithTime {
     }
 
     protected Message message(User author, String content) {
-        MessageImpl messageImpl = new MessageImpl(DiscordUtil.idFromTime(now()), channel, false);
-        messageImpl.setAuthor(author);
-        messageImpl.setContent(content);
-        return messageImpl;
+        return new ReceivedMessage(
+                DiscordUtil.idFromTime(now()),
+                channel,
+                null,
+                false,
+                false,
+                null,
+                null,
+                false,
+                false,
+                content,
+                UUID.randomUUID().toString(),
+                author,
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList()
+        );
     }
 
     protected MessageReceivedEvent event(Message m) {

@@ -21,6 +21,6 @@ public final class StatsCollector extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         logger.info(() -> "[" + event.getGuild().getName() + "#" + event.getChannel().getName() + "] "
             + " <" + event.getAuthor().getName() + "> "
-            + event.getMessage().getContent());
+            + event.getMessage().getContentRaw());
     }
 }
