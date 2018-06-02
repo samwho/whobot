@@ -1,5 +1,6 @@
 package uk.co.samwho.whobot;
 
+import com.google.common.flogger.FluentLogger;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import uk.co.samwho.whobot.commands.EchoCommand;
@@ -13,14 +14,13 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.logging.LogManager;
-import java.util.logging.Logger;
 
 public class Whobot {
-    private static Logger logger = Logger.getLogger(Whobot.class.getName());
+    private static FluentLogger logger = FluentLogger.forEnclosingClass();
 
     public static void main(String ...args) throws IOException {
         LogManager.getLogManager().readConfiguration(
-            ClassLoader.getSystemResourceAsStream("logging.properties"));
+                Whobot.class.getClassLoader().getResourceAsStream("logging.properties"));
 
         StatsCollector stats = new StatsCollector();
 
@@ -31,23 +31,23 @@ public class Whobot {
                 .wordList(WordList.from(Config.badWords()))
                 .duration(Duration.ofMinutes(10L))
                 .threshold(5)
-                .addCallback((user) -> logger.info(user.getName() + " is swearing a lot!"))
+                .addCallback((user) -> logger.atInfo().log(user.getName() + " is swearing a lot!"))
                 .build();
 
         try
         {
-            logger.info("connecting to Discord...");
+            logger.atInfo().log("connecting to Discord...");
             new JDABuilder(AccountType.BOT)
                 .setToken(Config.token())
                 .addEventListener(dispatcher)
                 .addEventListener(stats)
                 .addEventListener(swearTracker)
                 .buildBlocking();
-            logger.info("connected!");
+            logger.atInfo().log("connected!");
         }
         catch (LoginException | InterruptedException e)
         {
-            logger.severe("error connecting to Discord: " + e);
+            logger.atSevere().withCause(e).log("error connecting to Discord");
             System.exit(1);
         }
     }
