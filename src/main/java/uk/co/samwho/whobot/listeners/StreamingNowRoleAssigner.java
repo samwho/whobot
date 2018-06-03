@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 
 public final class StreamingNowRoleAssigner extends ListenerAdapter {
     private static final long GUILD_PROGDISC = 238666723824238602L;
-    private static final long ROLE_STREAMING_NOW = 0L;
+    private static final long ROLE_STREAMING_NOW = 452619134832738304L;
 
     private static FluentLogger logger = FluentLogger.forEnclosingClass();
     private final Set<User> streamingNow;

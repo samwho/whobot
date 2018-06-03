@@ -1,14 +1,21 @@
 package uk.co.samwho.whobot.commands;
 
 import com.beust.jcommander.Parameter;
+import com.google.inject.Singleton;
 import net.dv8tion.jda.core.entities.ChannelType;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.util.List;
 
+@Singleton
 public class EchoCommand extends CommandWithParameters {
     @Parameter
     private List<String> args;
+
+    @Override
+    public String getName() {
+        return "echo";
+    }
 
     @Override
     void run(MessageReceivedEvent event) {

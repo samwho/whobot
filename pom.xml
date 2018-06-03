@@ -71,6 +71,11 @@
             <artifactId>flogger-system-backend</artifactId>
             <version>0.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.2.0</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.auto.value</groupId>

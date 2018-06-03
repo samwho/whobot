@@ -1,5 +1,8 @@
 package uk.co.samwho.whobot.listeners;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import uk.co.samwho.whobot.util.ParsedMessageContent;
@@ -7,24 +10,30 @@ import uk.co.samwho.whobot.commands.Command;
 
 import java.util.*;
 
+@Singleton
 public final class CommandDispatcher extends ListenerAdapter {
-    private final Map<String, Command> commands = new HashMap<>();
+    private final Map<String, Command> commands;
+    private final String prefix;
+
+    @Inject
+    CommandDispatcher(Map<String, Command> commands, @Named("prefix") String prefix) {
+        this.commands = commands;
+        this.prefix = prefix;
+    }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         ParsedMessageContent pmc = ParsedMessageContent.from(event);
-        if (pmc.isCommand()) {
-            Command command = commands.get(pmc.getCommandName());
-            command.accept(event, pmc);
+        if (!pmc.isCommand(prefix)) {
             return;
         }
-    }
 
-    public void register(String name, Command command) {
-        if (commands.containsKey(name)) {
-            throw new IllegalArgumentException("command with name \"" + name + "\" already exists");
+        Command command = commands.get(pmc.getCommandName(prefix));
+        if (command == null) {
+            // TODO(samwho): error handling here
+            return;
         }
 
-        this.commands.put(name, command);
+        command.accept(event, pmc);
     }
 }

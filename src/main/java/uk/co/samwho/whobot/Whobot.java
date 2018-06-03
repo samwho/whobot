@@ -1,53 +1,33 @@
 package uk.co.samwho.whobot;
 
 import com.google.common.flogger.FluentLogger;
-import net.dv8tion.jda.core.AccountType;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import net.dv8tion.jda.core.JDABuilder;
-import uk.co.samwho.whobot.commands.EchoCommand;
-import uk.co.samwho.whobot.listeners.CommandDispatcher;
-import uk.co.samwho.whobot.listeners.EventLogger;
-import uk.co.samwho.whobot.listeners.WordListTracker;
-import uk.co.samwho.whobot.util.WordList;
+import uk.co.samwho.whobot.annotations.Init;
+import uk.co.samwho.whobot.guice.CommandModule;
+import uk.co.samwho.whobot.guice.ConfigModule;
+import uk.co.samwho.whobot.guice.JDAModule;
+import uk.co.samwho.whobot.guice.ListenerModule;
 
-import javax.security.auth.login.LoginException;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.logging.LogManager;
+import java.util.Set;
 
 public class Whobot {
-    private static FluentLogger logger = FluentLogger.forEnclosingClass();
+    public static void main(String ...args) throws Exception {
+        Injector injector = Guice.createInjector(
+                new ConfigModule(),
+                new ListenerModule(),
+                new CommandModule(),
+                new JDAModule()
+        );
 
-    public static void main(String ...args) throws IOException {
-        LogManager.getLogManager().readConfiguration(
-                Whobot.class.getClassLoader().getResourceAsStream("logging.properties"));
-
-        CommandDispatcher dispatcher = new CommandDispatcher();
-        dispatcher.register("echo", new EchoCommand());
-
-        WordListTracker swearTracker = WordListTracker.builder()
-                .wordList(WordList.from(Config.badWords()))
-                .duration(Duration.ofMinutes(10L))
-                .threshold(5)
-                .addCallback((user) -> logger.atInfo().log(user.getName() + " is swearing a lot!"))
-                .build();
-
-        try
-        {
-            logger.atInfo().log("connecting to Discord...");
-            new JDABuilder(AccountType.BOT)
-                .setToken(Config.token())
-                .addEventListener(dispatcher)
-                .addEventListener(swearTracker)
-                .addEventListener(new EventLogger())
-                .buildBlocking();
-            logger.atInfo().log("connected!");
+        Set<@Init Runnable> inits = injector.getInstance(Key.get(new TypeLiteral<Set<@Init Runnable>>() {}));
+        for (Runnable init : inits) {
+            init.run();
         }
-        catch (LoginException | InterruptedException e)
-        {
-            logger.atSevere().withCause(e).log("error connecting to Discord");
-            System.exit(1);
-        }
+
+        injector.getInstance(JDABuilder.class).buildBlocking();
     }
-
 }
