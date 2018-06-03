@@ -1,6 +1,5 @@
 package uk.co.samwho.whobot;
 
-import com.google.common.flogger.FluentLogger;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;

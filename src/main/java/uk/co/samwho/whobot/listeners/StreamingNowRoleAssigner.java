@@ -1,26 +1,65 @@
 package uk.co.samwho.whobot.listeners;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.flogger.FluentLogger;
+import com.google.inject.Singleton;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Game;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.RichPresence;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.events.ReadyEvent;
+import net.dv8tion.jda.core.events.StatusChangeEvent;
 import net.dv8tion.jda.core.events.user.update.UserUpdateGameEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.requests.restaction.AuditableRestAction;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-
+@Singleton
 public final class StreamingNowRoleAssigner extends ListenerAdapter {
     private static final long GUILD_PROGDISC = 238666723824238602L;
     private static final long ROLE_STREAMING_NOW = 452619134832738304L;
 
     private static FluentLogger logger = FluentLogger.forEnclosingClass();
-    private final Set<User> streamingNow;
 
-    public StreamingNowRoleAssigner() {
-        this.streamingNow = new HashSet<>();
+    private boolean hasNecessaryPermissions(Guild guild) {
+        return guild.getSelfMember().hasPermission(Permission.MANAGE_ROLES);
+    }
+
+    @Override
+    public void onReady(ReadyEvent event) {
+        for (Guild guild : event.getJDA().getGuilds()) {
+            if (guild.getIdLong() != GUILD_PROGDISC) {
+                continue;
+            }
+
+            if (!hasNecessaryPermissions(guild)) {
+                logger.atSevere().log("bot doesn't have the necessary permissions in %s", guild.getName());
+                continue;
+            }
+
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            int add = 0;
+            int remove = 0;
+
+            synchronized (this) {
+                for (Member member : guild.getMembers()) {
+                    if (hasStreamingNowRole(guild, member)) {
+                        if (!isTwitchProgrammingStream(member.getGame())) {
+                            removeStreamingNowRoleFromMember(guild, member);
+                            remove++;
+                        }
+                    } else if (isTwitchProgrammingStream(member.getGame())) {
+                        addStreamingNowRoleToMember(guild, member);
+                        add++;
+                    }
+                }
+            }
+
+            logger.atInfo().log(
+                    "build state on guild available took %s, added role to %s members, removed from %s members",
+                    stopwatch.elapsed(), add, remove);
+        }
     }
 
     @Override
@@ -29,32 +68,48 @@ public final class StreamingNowRoleAssigner extends ListenerAdapter {
             return;
         }
 
-        User user = event.getUser();
+        Member member = event.getMember();
+        Guild guild = event.getGuild();
 
-
-        if (isStreamStart(event) && isTwitchProgrammingStream(event.getNewGame())) {
-            AuditableRestAction<Void> voidAuditableRestAction =
-                    event.getGuild().getController().addSingleRoleToMember(
-                        event.getMember(), event.getGuild().getRoleById(ROLE_STREAMING_NOW));
-            try {
-                voidAuditableRestAction.submit().get();
-                streamingNow.add(user);
-                logger.atInfo().log("programming stream started for user %s", user);
-            } catch (InterruptedException | ExecutionException e) {
-                // do something
-            }
-        } else if (streamingNow.contains(user) && isStreamEnd((event))) {
-            AuditableRestAction<Void> voidAuditableRestAction =
-                    event.getGuild().getController().removeSingleRoleFromMember(
-                            event.getMember(), event.getGuild().getRoleById(ROLE_STREAMING_NOW));
-            try {
-                voidAuditableRestAction.submit().get();
-                streamingNow.remove(user);
-                logger.atInfo().log("programming stream ended for user %s", user);
-            } catch (InterruptedException | ExecutionException e) {
-                // do something
-            }
+        if (!hasStreamingNowRole(guild, member) && isStreamStart(event) && isTwitchProgrammingStream(event.getNewGame())) {
+            addStreamingNowRoleToMember(guild, member);
+        } else if (hasStreamingNowRole(guild, member) && isStreamEnd((event))) {
+            removeStreamingNowRoleFromMember(guild, member);
         }
+    }
+
+    private void addStreamingNowRoleToMember(Guild guild, Member member) {
+        AuditableRestAction<Void> action =
+                guild.getController().addSingleRoleToMember(member, guild.getRoleById(ROLE_STREAMING_NOW));
+
+        String name = member.getUser().getName();
+        action.queue(
+                (success) -> {
+                    logger.atInfo().log("user %s successfully given StreamingNow role", name);
+                },
+                (fail) -> {
+                    logger.atInfo().withCause(fail).log("could not give user %s StreamingNow role", name);
+                }
+        );
+    }
+
+    private void removeStreamingNowRoleFromMember(Guild guild, Member member) {
+        AuditableRestAction<Void> action =
+                guild.getController().removeSingleRoleFromMember(member, guild.getRoleById(ROLE_STREAMING_NOW));
+
+        String name = member.getUser().getName();
+        action.queue(
+                (success) -> {
+                    logger.atInfo().log("user %s successfully stripped of StreamingNow role", name);
+                },
+                (fail) -> {
+                    logger.atInfo().withCause(fail).log("could not give user %s StreamingNow role", name);
+                }
+        );
+    }
+
+    private boolean hasStreamingNowRole(Guild guild, Member member) {
+        return member.getRoles().contains(guild.getRoleById(ROLE_STREAMING_NOW));
     }
 
     private boolean isStreamStart(UserUpdateGameEvent event) {
@@ -81,11 +136,19 @@ public final class StreamingNowRoleAssigner extends ListenerAdapter {
             return false;
         }
 
-        if (presence.getUrl() != null && !presence.getUrl().startsWith("https://twitch.tv")) {
+        if (presence.getUrl() == null) {
             return false;
         }
 
-        if (presence.getDetails() != null && !presence.getDetails().equals("Programming")) {
+        if (!presence.getUrl().startsWith("https://www.twitch.tv")) {
+            return false;
+        }
+
+        if (presence.getDetails() == null) {
+            return false;
+        }
+
+        if (!presence.getDetails().equals("Programming")) {
             return false;
         }
 
