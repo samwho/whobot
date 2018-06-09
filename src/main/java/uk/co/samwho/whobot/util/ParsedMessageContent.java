@@ -1,15 +1,15 @@
 package uk.co.samwho.whobot.util;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class ParsedMessageContent {
-    private static final Pattern tokenizer = Pattern.compile("\\s+");
+    private static final Splitter tokenizer = Splitter.on(Pattern.compile("\\s+"));
 
     private final List<String> splitMessage;
 
@@ -26,7 +26,7 @@ public class ParsedMessageContent {
     }
 
     private ParsedMessageContent(String content) {
-        this.splitMessage = ImmutableList.copyOf(Arrays.asList(tokenizer.split(content)));
+        this.splitMessage = ImmutableList.copyOf(tokenizer.split(content));
     }
 
     public boolean isCommand(String prefix) {

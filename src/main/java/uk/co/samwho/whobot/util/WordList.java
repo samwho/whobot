@@ -28,12 +28,8 @@ public class WordList {
     }
 
     private WordList(Stream<String> words) {
-        Trie.TrieBuilder builder = Trie.builder()
-            .ignoreOverlaps()
-            .onlyWholeWords();
-
-        words.forEach((word) -> builder.addKeyword(word));
-
+        Trie.TrieBuilder builder = Trie.builder().ignoreOverlaps().onlyWholeWords();
+        words.forEach(builder::addKeyword);
         this.matcher = builder.build();
     }
 

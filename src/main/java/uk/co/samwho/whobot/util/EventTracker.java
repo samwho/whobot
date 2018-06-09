@@ -9,6 +9,19 @@ import java.time.Instant;
 import java.util.PriorityQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * A helper class to count the number of times a thing happens in a given
+ * time interval.
+ *
+ * <pre>
+ *     Duration duration = Duration.ofMinutes(1);
+ *     EventTracker eventTracker = EventTracker.over(duration);
+ *     eventTracker.inc();
+ *     eventTracker.count(); // 1
+ *     Thread.sleep(duration.getSeconds() * 1000);
+ *     eventTracker.count(); // 0
+ * </pre>
+ */
 public class EventTracker {
     @AutoValue
     static abstract class Event implements Comparable<Event> {

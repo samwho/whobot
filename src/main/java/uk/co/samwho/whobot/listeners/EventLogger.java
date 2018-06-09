@@ -72,6 +72,9 @@ import net.dv8tion.jda.core.events.user.*;
 import net.dv8tion.jda.core.events.user.update.*;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 
+/**
+ * Log ALL of the events!
+ */
 @Singleton
 public final class EventLogger extends ListenerAdapter {
     private static FluentLogger logger = FluentLogger.forEnclosingClass();
